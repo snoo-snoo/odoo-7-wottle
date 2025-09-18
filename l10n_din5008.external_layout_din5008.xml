@@ -1,0 +1,105 @@
+<t t-name="l10n_din5008.external_layout_din5008">
+  <div>
+    <!-- Set company variable if not already set -->
+    <t t-set="company" t-value="company or (o and o.company_id) or (doc and doc.company_id) or user.company_id"/>
+    
+    <!-- Set o variable if not already set (for DIN5008 variables) -->
+    <t t-set="o" t-value="o or doc"/>
+    
+    <!-- HEADER -->
+    <div t-attf-class="header din_page o_company_#{company.id}_layout #{'din_page_pdf' if report_type == 'pdf' else ''}">
+      <table class="company_header table-borderless" t-att-style="'height: %dmm;' % (din_header_spacing or 27)">
+        <tr>
+          <td style="text-align: left; float: left">
+            <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 90px; max-width: 200px; float: left"/>
+          </td>
+          <td/>
+        </tr>
+      </table>
+    </div>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <div t-attf-class="din_page invoice_note article o_company_#{company.id}_layout {{'o_report_layout_background' if company.layout_background != 'Blank' else ''}} #{'din_page_pdf' if report_type == 'pdf' else ''}}" t-attf-style="background-image: url({{ 'data:image/png;base64,%s' % company.layout_background_image.decode('utf-8') if company.layout_background_image and company.layout_background == 'Custom' else '/base/static/img/demo_logo_report.png' if company.layout_background == 'Demo logo' else ''}});" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
+      
+      <!-- DIN5008 Address and Document Information -->
+      <table class="din_company_info table-borderless">
+        <tr>
+          <td>
+            <div class="address" id="din5008_report_main_address">
+              <t t-if="company.name">
+              <p style="font-size: 8px; padding-left: -5mm;">Wottle GmbH | Schubertstraße 20 | 2170 Poysdorf | Österreich</p>
+            </t>    
+              <!-- DIN5008 Address Block -->
+              <t t-if="din5008_address_block and not is_html_empty(din5008_address_block)">
+                <t t-out="din5008_address_block"/>
+              </t>
+              <!-- Fallback address display -->
+              <t t-elif="o and o._name == 'account.move'">
+                <div t-field="o.partner_id" t-options="{'widget': 'contact', 'fields': ['address','name'], 'no_marker': True}"/>
+                <p t-if="o.partner_id.vat">
+                  <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-out="o.company_id.account_fiscal_country_id.vat_label"/>
+                  <t t-else="">Tax ID</t>:
+                  <span t-field="o.partner_id.vat"/>
+                </p>
+              </t>
+              <t t-elif="o and o._name == 'sale.order'">
+                <div t-field="o.partner_id" t-options="{'widget': 'contact', 'fields': ['address','name'], 'no_marker': True}"/>
+                <p t-if="o.partner_id.vat">
+                  <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-out="o.company_id.account_fiscal_country_id.vat_label"/>
+                  <t t-else="">Tax ID</t>:
+                  <span t-field="o.partner_id.vat"/>
+                </p>
+              </t>
+            </div>
+          </td>
+          <td t-if="din5008_document_information">
+            <t t-out="din5008_document_information"/>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Document Title -->
+      <h2>
+        <t t-if="din5008_document_title">
+          <t t-out="din5008_document_title"/>
+        </t>
+        <t t-elif="o and 'name' in o">
+          <span t-field="o.name"/>
+        </t>
+        <t t-else="">Document</t>
+      </h2>
+
+      <!-- Content from inherited templates will be inserted here -->
+      <t t-raw="0"/>
+      
+    </div>
+
+    <!-- FOOTER -->
+    <div t-attf-class="din_page footer">
+      <div class="company_details">
+        <table class="table table-borderless" style="width: 100%; font-size: 13px; border: none;">
+          <tr>
+            <td>
+              <ul class="list-inline text-nowrap">
+                <li t-if="company.company_details">
+                  <span t-field="company.company_details"/>
+                </li>
+              </ul>
+            </td>
+            <td>
+              <ul class="list-inline">
+                <li t-if="company.report_footer">
+                  <span t-field="company.report_footer"/>
+                </li>
+              </ul>
+            </td>
+            <td style="color: #83899d !important;"/>
+            <td style="width: 40px; vertical-align: middle;">
+              <img t-att-src="'/web/image/ir.attachment/1950/datas'" style="height: 60px; margin-top: -8px" alt="Heart Flag"/>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</t>

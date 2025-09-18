@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data inherit_id="sale.report_saleorder_document">
+        <xpath expr="//t[@t-set='forced_vat']" position="after">
+            <t t-set="din5008_document_information">
+                <div class="information_block" t-if="doc and doc._name=='sale.order'">
+                    <table>
+                        <tr t-if="doc.name">
+                            <td>Order No.</td>
+                            <td><t t-out="doc.name"/></td>
+                        </tr>
+                        <tr t-if="doc.date_order">
+                            <td>Order Date</td>
+                            <td><t t-out="doc.date_order" t-options="{'widget': 'date'}"/></td>
+                        </tr>
+                        <tr t-if="doc.validity_date and doc.state in ['draft', 'sent']">
+                            <td>Expiration Date</td>
+                            <td><t t-out="doc.validity_date" t-options="{'widget': 'date'}"/></td>
+                        </tr>
+                        <tr t-if="doc.client_order_ref">
+                            <td>Your Reference</td>
+                            <td><t t-out="doc.client_order_ref"/></td>
+                        </tr>
+                        <tr t-if="doc.user_id.name">
+                            <td>Salesperson</td>
+                            <td><t t-out="doc.user_id.name"/></td>
+                        </tr>
+                    </table>
+                </div>
+            </t>
+
+            <t t-set="din5008_address_block">
+                <t t-if="doc and doc._name=='sale.order'">
+                    <t t-set="commercial_partner" t-value="doc.commercial_partner_id"/>
+                    <t t-set="invoice_partner" t-value="doc.partner_invoice_id"/>
+                    <t t-set="delivery_partner" t-value="doc.partner_shipping_id"/>
+
+                    <t t-set="different_partner_count" t-value="len({partner.id for partner in [doc.partner_id.commercial_partner_id, doc.partner_invoice_id, doc.partner_shipping_id] if partner})"/>
+                    <div t-if="different_partner_count > 1">
+                        <t t-if="delivery_partner and delivery_partner != commercial_partner">
+                            <div class="shipping_address">
+                                <span class="fw-bold">Shipping Address:</span>
+                                <address t-esc="doc.partner_shipping_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}"/>
+                            </div>
+                        </t>
+                        <t t-if="invoice_partner and invoice_partner != commercial_partner">
+                            <div class="shipping_address">
+                                <span class="fw-bold">Invoicing Address:</span>
+                                <address class="mb-0" t-esc="doc.partner_invoice_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}"/>
+                                <div t-if="doc.partner_invoice_id.vat">
+                                    <t t-if="doc.partner_invoice_id.company_id.account_fiscal_country_id.vat_label" t-out="doc.partner_invoice_id.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
+                                    <t t-else="">Tax ID</t>: <span t-field="doc.partner_invoice_id.vat"/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                    <t t-else="">
+                        <div t-field="doc.partner_id" t-options="{'widget': 'contact', 'fields': ['address','name'], 'no_marker': True}"/>
+                        <p t-if="doc.partner_id.vat">
+                            <t t-if="doc.company_id.account_fiscal_country_id.vat_label" t-out="doc.company_id.account_fiscal_country_id.vat_label"/>
+                            <t t-else="">Tax ID</t>:
+                            <span t-field="doc.partner_id.vat"/>
+                        </p>
+                    </t>
+                </t>
+            </t>
+
+            <t t-set="din5008_document_title">
+                <span t-if="doc and doc._name == 'sale.order'">
+                    <t t-set="is_proforma" t-value="env.context.get('proforma', False) or is_pro_forma"/>
+                    <t t-if="is_proforma">Pro-Forma Invoice</t>
+                    <t t-elif="doc.state in ['draft','sent']">Quotation</t>
+                    <t t-else="">Order</t>
+                </span>
+            </t>
+        </xpath>
+    </data>
+</odoo>
